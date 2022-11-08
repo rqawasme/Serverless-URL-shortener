@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const dynamo = new AWS.DynamoDB.DocumentClient();
+const shortId = require('shortid');
 
 exports.handler = async (event, context) => {
     let body;
@@ -17,27 +18,38 @@ exports.handler = async (event, context) => {
             case 'POST':
                 let requestJSON = JSON.parse(event.body);
                 console.log(requestJSON)
+                const shorturl = shortId.generate()
                 await dynamo
                     .put({
                         TableName: process.env.TABLE,
                         Item: {
-                            id: requestJSON.id,
+                            short: shorturl,
                             full: requestJSON.fullUrl,
-                            short: requestJSON.shortUrl
                         }
                     })
                     .promise();
-                body = `Put item ${requestJSON.id}`;
+                console.log(shorturl);
+                body = `Put item ${requestJSON.fullUrl} as ${shorturl}`;
                 break;
-            case 'GET':
+            case 'PUT':
                 body = await dynamo.scan({ TableName: process.env.TABLE }).promise();
                 console.log("this works", body);
                 break;
-            case "GET /{urllink}":
-                body = "I want to see if anything changes from this";
+            case 'GET':
+                try {
+                    const url = await dynamo.getItem({ TableName: process.env.TABLE, Key: {"short": {S: event.pathParameters.shorturl}} }).promise();
+                    console.log(url)
+                    statusCode = 302;
+                    body = url;
+                    location.href = url;
+                } catch (error) {
+                    console.log("ERROR WITH GETTING ITEM");
+                    statusCode = 404;
+                    body = "Url not found. Could not redirect.";
+                }
                 break;
-    
             default:
+                console.log("SKIP ALL");
                 break;
         }         
     } catch (error) {
@@ -49,14 +61,6 @@ exports.handler = async (event, context) => {
     } finally {
         body = JSON.stringify(body);
     }
-    // const response = {
-    //     statusCode: 200,
-        // body: JSON.stringify([
-        //     {todoId: 1, text: 'walk the dog 🐕'},
-        //     {todoId: 2, text: 'cook dinner 🥗'},
-        //   ]),
-    // };
-    // return response; 
 
     return {statusCode, body, headers}
 }
