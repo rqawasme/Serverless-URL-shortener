@@ -16,15 +16,14 @@ exports.handler = async (event, context) => {
     let headers = {
       "Content-Type": "application/json"
     };
-
-    console.log("did it work?", event, context);
     const httpMethod = event.httpMethod;
 
     try {
         switch (httpMethod) {
             case 'POST':
+                // TODO: Make sure the url sent is an actual url
+                // TODO: Require authorization to be able to create short urls
                 let requestJSON = JSON.parse(event.body);
-                console.log(requestJSON)
                 const shorturl = generateRandomString();
                 await dynamo
                     .put({
@@ -35,29 +34,26 @@ exports.handler = async (event, context) => {
                         }
                     })
                     .promise();
-                console.log(shorturl);
-                body = `Put item ${requestJSON.full} as ${shorturl}`;
+                body = {"shortlink": shorturl};
                 break;
-            case 'PUT':
-                body = await dynamo.scan({ TableName: process.env.TABLE }).promise();
-                console.log("this works", body);
-                break;
+            // Was used for testing
+            // case 'PUT':
+            //     body = await dynamo.scan({ TableName: process.env.TABLE }).promise();
+            //     break;
             case 'GET':
                 try {
                     const obj = await dynamo.get({ TableName: process.env.TABLE, Key: {"short": event.pathParameters.shorturl} }).promise();
                     const url = obj["Item"]["full"];
-                    console.log(url)
                     statusCode = 302;
                     body = url;
                     headers = {"location": url};
                 } catch (error) {
-                    console.log("ERROR WITH GETTING ITEM");
                     statusCode = 404;
                     body = "Url not found. Could not redirect.";
                 }
                 break;
             default:
-                console.log("SKIP ALL");
+                throw Error("Invalid Call.");
                 break;
         }         
     } catch (error) {
