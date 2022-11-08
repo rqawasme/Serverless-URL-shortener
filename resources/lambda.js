@@ -10,7 +10,10 @@ exports.handler = async (event) => {
         console.log(data)
         const response = {
             statusCode: 200,
-            body: JSON.stringify('Hello from Lambda!'),
+            body: JSON.stringify([
+                {todoId: 1, text: 'walk the dog 🐕'},
+                {todoId: 2, text: 'cook dinner 🥗'},
+              ]),
         };
         return response;            
     } catch (error) {
