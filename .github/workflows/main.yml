@@ -35,7 +35,7 @@ jobs:
           aws-region: us-west-2
 
       - name: cdk bootstrap
-        uses: tj-actions/aws-cdk@v3
+        uses: youyo/aws-cdk-github-actions@v2.1.1
         with:
           cdk_subcommand: 'bootstrap'
         env:
