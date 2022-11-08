@@ -24,8 +24,7 @@ jobs:
           CI: true
         run: |
           npm ci
-      - name: AWS CDK GitHub Actions
-        uses: youyo/aws-cdk-github-actions@v2.1.1
+          
       - name: cdk synth
         uses: youyo/aws-cdk-github-actions@v2.1.1
         with:
@@ -34,8 +33,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
-        run: |
-          cdk synth
+
       - name: cdk bootstrap
         uses: youyo/aws-cdk-github-actions@v2.1.1
         with:
@@ -44,6 +42,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
+
       - name: cdk deploy
         uses: youyo/aws-cdk-github-actions@v2.1.1
         with:
