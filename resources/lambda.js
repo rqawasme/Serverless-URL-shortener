@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const dynamo = new AWS.DynamoDB.DocumentClient();
-const shortId = require('shortid');
+// const shortId = require('shortid');
+import * as shortId from "/opt/nodejs/shortid-utils";
 
 exports.handler = async (event, context) => {
     let body;
