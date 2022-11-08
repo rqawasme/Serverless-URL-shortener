@@ -1,36 +1,42 @@
 const AWS = require('aws-sdk');
 const dynamo = new AWS.DynamoDB.DocumentClient();
-// const shortId = require('shortid');
-import * as shortId from "/opt/nodejs/shortid-utils";
+
+const generateRandomString = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let str = '';
+    for(var i = 0; i < 8; i++){
+        str += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return str;
+}
 
 exports.handler = async (event, context) => {
     let body;
     let statusCode = 200;
-    const headers = {
+    let headers = {
       "Content-Type": "application/json"
     };
 
     console.log("did it work?", event, context);
     const httpMethod = event.httpMethod;
-    const path = event.path;
 
     try {
         switch (httpMethod) {
             case 'POST':
                 let requestJSON = JSON.parse(event.body);
                 console.log(requestJSON)
-                const shorturl = shortId.generate()
+                const shorturl = generateRandomString();
                 await dynamo
                     .put({
                         TableName: process.env.TABLE,
                         Item: {
-                            short: shorturl,
-                            full: requestJSON.fullUrl,
+                            "short": shorturl,
+                            "full": requestJSON.full,
                         }
                     })
                     .promise();
                 console.log(shorturl);
-                body = `Put item ${requestJSON.fullUrl} as ${shorturl}`;
+                body = `Put item ${requestJSON.full} as ${shorturl}`;
                 break;
             case 'PUT':
                 body = await dynamo.scan({ TableName: process.env.TABLE }).promise();
@@ -38,11 +44,12 @@ exports.handler = async (event, context) => {
                 break;
             case 'GET':
                 try {
-                    const url = await dynamo.getItem({ TableName: process.env.TABLE, Key: {"short": {S: event.pathParameters.shorturl}} }).promise();
+                    const obj = await dynamo.get({ TableName: process.env.TABLE, Key: {"short": event.pathParameters.shorturl} }).promise();
+                    const url = obj["Item"]["full"];
                     console.log(url)
                     statusCode = 302;
                     body = url;
-                    location.href = url;
+                    headers = {"location": url};
                 } catch (error) {
                     console.log("ERROR WITH GETTING ITEM");
                     statusCode = 404;
